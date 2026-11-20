@@ -1170,7 +1170,7 @@ async function loadDailyVideo() {
   });
 }
   
-  
+
 // =================================
 // MEMBER DATA
 // =================================
@@ -1199,7 +1199,6 @@ async function loadMemberData() {
 
     document.getElementById("referralBalance").textContent =
       "Rs. " + referral.toLocaleString("en-PK");
-
   }
 
   const {data:membership} = await db
@@ -1211,18 +1210,18 @@ async function loadMemberData() {
     .limit(1)
     .maybeSingle();
 
-document.getElementById("activePlan").textContent =
+  document.getElementById("activePlan").textContent =
     membership?.plans?.name || "None";
 
-document.getElementById("memberPlanName").textContent =
+  document.getElementById("memberPlanName").textContent =
     membership?.plans?.name || "None";
 
-document.getElementById("memberPlanPrice").textContent =
+  document.getElementById("memberPlanPrice").textContent =
     membership?.plans?.price
     ? "Rs. " + Number(membership.plans.price).toLocaleString("en-PK")
     : "Rs. 0";
 
-document.getElementById("memberPlanDate").textContent =
+  document.getElementById("memberPlanDate").textContent =
     membership?.activated_at
     ? new Date(membership.activated_at).toLocaleDateString("en-PK")
     : "Not Activated";
@@ -1249,7 +1248,6 @@ document.getElementById("memberPlanDate").textContent =
       const tr = document.createElement("tr");
 
       const date = new Date(item.created_at).toLocaleDateString();
-
       const amount = Number(item.amount).toLocaleString("en-PK");
 
       const cells = [
@@ -1267,13 +1265,11 @@ document.getElementById("memberPlanDate").textContent =
       table.appendChild(tr);
     });
   }
+
+  // Load daily video
+  await loadDailyVideo();
 }
-
-  // Load daily video 
-await loadDailyVideo();
-  }
   
-
 // =================================
 // ADMIN DATA
 // =================================
