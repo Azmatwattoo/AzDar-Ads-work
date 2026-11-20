@@ -1115,6 +1115,8 @@ async function loadDashboard(user) {
 // =================================
 // AZDAR DAILY VIDEO LOADER
 // =================================
+
+  
 async function loadDailyVideo() {
   const box = document.getElementById("azdarVideoList");
   if (!box) return;
@@ -1123,7 +1125,7 @@ async function loadDailyVideo() {
 
   const { data: tasks, error } = await db
     .from("ad_tasks")
-    .select("id,title,video_url,minimum_watch_seconds,reward_amount")
+    .select("id,title,video_url,minimum_watch_seconds")
     .eq("active", true)
     .limit(1);
 
@@ -1161,12 +1163,118 @@ async function loadDailyVideo() {
   const info = document.createElement("p");
   info.className = "muted";
   info.textContent =
-    "Minimum watch time: " + task.minimum_watch_seconds + " seconds";
+    "Play video for at least " +
+    task.minimum_watch_seconds +
+    " seconds to claim your daily reward.";
   box.appendChild(info);
+
+  let viewId = null;
+  let starting = false;
+  let sessionReady = false;
+  let claiming = false;
+  let claimed = false;
+  let watchedSeconds = 0;
+  let lastMediaTime = null;
+
+  // Start secure watch session
+  video.addEventListener("play", async () => {
+    if (sessionReady || starting || claimed) return;
+
+    starting = true;
+    info.textContent = "Starting your watch session...";
+
+    const { data, error } = await db.rpc(
+      "start_daily_ad_watch",
+      { p_task_id: task.id }
+    );
+
+    starting = false;
+
+    if (error) {
+      info.textContent = "Could not start: " + error.message;
+      return;
+    }
+
+    viewId = data;
+    sessionReady = true;
+    lastMediaTime = video.currentTime;
+
+    info.textContent = "Video playing. Keep watching...";
+  });
+
+  // Count actual video playback progress
+  video.addEventListener("timeupdate", async () => {
+    if (
+      !sessionReady ||
+      claimed ||
+      claiming ||
+      video.paused ||
+      video.seeking
+    ) return;
+
+    const currentTime = video.currentTime;
+
+    if (lastMediaTime === null) {
+      lastMediaTime = currentTime;
+      return;
+    }
+
+    const difference = currentTime - lastMediaTime;
+    lastMediaTime = currentTime;
+
+    // Ignore large jumps caused by seeking or buffering
+    if (difference > 0 && difference <= 1.5) {
+      watchedSeconds += difference;
+    }
+
+    const requiredSeconds =
+      Number(task.minimum_watch_seconds) || 15;
+
+    if (watchedSeconds < requiredSeconds) {
+      info.textContent =
+        "Watched: " + Math.floor(watchedSeconds) +
+        " / " + requiredSeconds + " seconds";
+      return;
+    }
+
+    claiming = true;
+    info.textContent = "Verifying watch and crediting reward...";
+
+    const { data, error } = await db.rpc(
+      "claim_daily_ad_reward",
+      { p_view_id: viewId }
+    );
+
+    if (error) {
+      claiming = false;
+      info.textContent = "Reward error: " + error.message;
+      return;
+    }
+
+    if (data && data.success) {
+      claimed = true;
+      info.textContent =
+        "Congratulations! Rs. " +
+        data.reward +
+        " credited to your wallet. Please refresh your dashboard to update the balance.";
+      video.pause();
+    } else {
+      claiming = false;
+      info.textContent = "Reward verification failed. Please try again.";
+    }
+  });
+
+  video.addEventListener("pause", () => {
+    lastMediaTime = null;
+  });
+
+  video.addEventListener("seeking", () => {
+    lastMediaTime = null;
+  });
 
   video.addEventListener("error", () => {
     info.textContent =
-      "Video could not play. Please contact admin to check the video URL.";
+      "Video could not play. Please contact admin.";
   });
 }
   
