@@ -829,6 +829,16 @@ footer{
 </script>
 <!-- AZDAR MEMBER DEPOSIT HISTORY END -->
   
+<!-- AZDAR VIDEO ADS START -->
+<section id="azdarVideoSection" class="card">
+  <h2 class="section-title">Daily Video Ads</h2>
+  <p class="muted">Watch your daily AzDar promotional video.</p>
+
+  <div id="azdarVideoList">
+    Loading video...
+  </div>
+</section>
+<!-- AZDAR VIDEO ADS END -->
   
 <h2 class="section-title">Membership Plans</h2>
 
@@ -1101,6 +1111,66 @@ async function loadDashboard(user) {
   await loadMemberData();
 }
 
+  
+// =================================
+// AZDAR DAILY VIDEO LOADER
+// =================================
+async function loadDailyVideo() {
+  const box = document.getElementById("azdarVideoList");
+  if (!box) return;
+
+  box.textContent = "Loading video...";
+
+  const { data: tasks, error } = await db
+    .from("ad_tasks")
+    .select("id,title,video_url,minimum_watch_seconds,reward_amount")
+    .eq("active", true)
+    .limit(1);
+
+  if (error) {
+    box.textContent = "Video load error: " + error.message;
+    return;
+  }
+
+  if (!tasks || tasks.length === 0) {
+    box.textContent = "No active video available right now.";
+    return;
+  }
+
+  const task = tasks[0];
+  box.replaceChildren();
+
+  const title = document.createElement("h3");
+  title.textContent = task.title;
+  box.appendChild(title);
+
+  const video = document.createElement("video");
+  video.controls = true;
+  video.playsInline = true;
+  video.preload = "metadata";
+  video.style.width = "100%";
+  video.style.borderRadius = "12px";
+  video.style.background = "#000";
+
+  const source = document.createElement("source");
+  source.src = task.video_url;
+  source.type = "video/mp4";
+  video.appendChild(source);
+  box.appendChild(video);
+
+  const info = document.createElement("p");
+  info.className = "muted";
+  info.textContent =
+    "Minimum watch time: " + task.minimum_watch_seconds + " seconds";
+  box.appendChild(info);
+
+  video.addEventListener("error", () => {
+    info.textContent =
+      "Video could not play. Please contact admin to check the video URL.";
+  });
+}
+  
+  
 // =================================
 // MEMBER DATA
 // =================================
@@ -1198,6 +1268,11 @@ document.getElementById("memberPlanDate").textContent =
     });
   }
 }
+
+  // Load daily video 
+await loadDailyVideo();
+  }
+  
 
 // =================================
 // ADMIN DATA
