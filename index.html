@@ -202,6 +202,43 @@ footer{
   .topbar{padding:14px 4%}
   .card{padding:17px}
 }
+  /* AZDAR WITHDRAWAL DESIGN */
+.withdraw-box{
+  background:#101d30;
+  border:1px solid #263c58;
+  border-radius:15px;
+  padding:18px;
+  margin:18px 0;
+}
+.withdraw-box h2,.withdraw-box h3{
+  color:#00e5ff;
+}
+.withdraw-box input,.withdraw-box select{
+  width:100%;
+  padding:13px;
+  margin:8px 0 15px;
+  border-radius:9px;
+  border:1px solid #40516b;
+  background:#07111f;
+  color:white;
+}
+.withdraw-box button{
+  padding:11px 15px;
+  border:0;
+  border-radius:8px;
+  background:linear-gradient(90deg,#00e5ff,#a855f7);
+  color:#07111f;
+  font-weight:bold;
+  margin:5px;
+}
+.withdraw-record{
+  background:#07111f;
+  border:1px solid #283651;
+  padding:14px;
+  border-radius:10px;
+  margin:12px 0;
+  overflow-wrap:anywhere;
+}
 </style>
 </head>
 
@@ -372,6 +409,58 @@ footer{
 <button class="btn btn-full" onclick="copyReferral()">COPY REFERRAL LINK</button>
 </div>
 
+  <!-- MEMBER WITHDRAWAL SECTION -->
+<section id="memberWithdrawal" class="withdraw-box">
+
+  <h2>Withdrawal Center</h2>
+  <p class="muted">Withdraw your available wallet balance.</p>
+
+  <div class="stat">
+    <small>Available Withdrawal Balance</small>
+    <h2 id="withdrawAvailable">Rs. 0</h2>
+  </div>
+
+  <hr>
+
+  <h3>Submit Withdrawal Request</h3>
+
+  <form id="withdrawForm">
+
+    <label>Amount (Rs.)</label>
+    <input id="withdrawAmount" type="number"
+      min="1" step="1" placeholder="Enter withdrawal amount" required>
+
+    <label>Payment Method</label>
+    <select id="withdrawMethod" required>
+      <option value="">Select Payment Method</option>
+      <option value="JazzCash">JazzCash</option>
+      <option value="Easypaisa">Easypaisa</option>
+    </select>
+
+    <label>Account Title</label>
+    <input id="withdrawTitle" type="text"
+      placeholder="Account holder name" required>
+
+    <label>Account Number</label>
+    <input id="withdrawNumber" type="tel"
+      placeholder="03XXXXXXXXX" required>
+
+    <button type="submit" id="withdrawSubmit">
+      SUBMIT WITHDRAWAL
+    </button>
+
+  </form>
+
+  <div id="withdrawMessage" class="message"></div>
+
+  <hr>
+
+  <h3>My Withdrawal History</h3>
+  <button onclick="loadWithdrawalHistory()">Refresh History</button>
+  <div id="withdrawHistory">Loading...</div>
+
+</section>
+<!-- MEMBER WITHDRAWAL SECTION END -->
   
 <!-- AZDAR DEPOSIT SYSTEM START -->
 <section id="azDeposit" class="section">
@@ -733,6 +822,154 @@ footer{
 </script>
 <!-- AZDAR ADMIN DEPOSIT APPROVAL END -->
 
+  <!-- AZDAR ADMIN WITHDRAWAL MANAGEMENT START -->
+<section id="azAdminWithdrawals" style="display:none;margin:20px 0">
+  <div class="deposit-card">
+    <h2 style="color:#00e5ff">Admin - Withdrawal Requests</h2>
+
+    <button id="azRefreshWithdrawals">Refresh Requests</button>
+
+    <div id="azWithdrawalList">Loading...</div>
+  </div>
+</section>
+
+<script>
+(async function(){
+
+  const db = window.supabase.createClient(
+    "https://wtkcuyireeeuvckcyjys.supabase.co",
+    "sb_publishable_1TaAxn0Uq3X36v0YE4YltA_y0l5HILt"
+  );
+
+  const panel = document.getElementById("azAdminWithdrawals");
+  const list = document.getElementById("azWithdrawalList");
+  const refresh = document.getElementById("azRefreshWithdrawals");
+
+  const {data:authData} = await db.auth.getUser();
+
+  if(!authData?.user) return;
+
+  const user = authData.user;
+
+  const {data:profile} = await db
+    .from("profiles")
+    .select("role")
+    .eq("id",user.id)
+    .single();
+
+  if(profile?.role !== "admin") return;
+
+  panel.style.display = "block";
+
+  async function loadRequests(){
+
+    list.textContent = "Loading withdrawals...";
+
+    const {data:requests,error} = await db
+      .from("withdrawals")
+      .select("*")
+      .in("status",["pending","processing"])
+      .order("created_at",{ascending:false});
+
+    if(error){
+      list.textContent = "Error: " + error.message;
+      return;
+    }
+
+    list.replaceChildren();
+
+    if(!requests?.length){
+      list.textContent = "No pending withdrawal requests.";
+      return;
+    }
+
+    for(const item of requests){
+
+      const card = document.createElement("div");
+
+      card.style.cssText =
+        "background:#07111f;border:1px solid #a855f7;" +
+        "border-radius:10px;padding:14px;margin:12px 0;color:white";
+
+      const member = await db
+        .from("profiles")
+        .select("full_name,phone")
+        .eq("id",item.user_id)
+        .maybeSingle();
+
+      const details = [
+        "Member: " + (member.data?.full_name || "Unknown"),
+        "Phone: " + (member.data?.phone || "Not available"),
+        "Amount: Rs. " + item.amount,
+        "Method: " + item.payment_method,
+        "Account Title: " + item.account_title,
+        "Account Number: " + item.account_number,
+        "Status: " + item.status.toUpperCase(),
+        "Submitted: " + new Date(item.created_at).toLocaleString()
+      ];
+
+      details.forEach(value=>{
+        const p = document.createElement("p");
+        p.textContent = value;
+        card.appendChild(p);
+      });
+
+      async function updateStatus(status){
+
+        if(!confirm("Are you sure you want to mark this request " + status + "?")) return;
+
+        const {error:updateError} = await db
+          .from("withdrawals")
+          .update({
+            status:status,
+            admin_note:status === "paid"
+              ? "Payment sent by admin"
+              : status === "rejected"
+              ? "Withdrawal rejected"
+              : "Withdrawal is being processed"
+          })
+          .eq("id",item.id)
+          .eq("status",item.status);
+
+        if(updateError){
+          alert("Error: " + updateError.message);
+          return;
+        }
+
+        alert("Withdrawal status updated.");
+        await loadRequests();
+      }
+
+      const actions = document.createElement("div");
+      actions.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:12px";
+
+      if(item.status === "pending"){
+        const processing = document.createElement("button");
+        processing.textContent = "Processing";
+        processing.onclick = ()=>updateStatus("processing");
+        actions.appendChild(processing);
+      }
+
+      const paid = document.createElement("button");
+      paid.textContent = "Mark Paid";
+      paid.onclick = ()=>updateStatus("paid");
+
+      const reject = document.createElement("button");
+      reject.textContent = "Reject";
+      reject.onclick = ()=>updateStatus("rejected");
+
+      actions.append(paid,reject);
+      card.appendChild(actions);
+      list.appendChild(card);
+    }
+  }
+
+  refresh.addEventListener("click",loadRequests);
+  await loadRequests();
+
+})();
+</script>
+<!-- AZDAR ADMIN WITHDRAWAL MANAGEMENT END -->
   
 <!-- AZDAR MEMBER DEPOSIT HISTORY START -->
 <section id="azMemberHistory" style="margin:20px 0">
@@ -1295,8 +1532,12 @@ async function loadMemberData() {
   } else {
 
     const total = wallet.reduce(
-      (sum,item)=>sum + Number(item.amount),0
-    );
+  (sum,item)=>sum + (
+    item.entry_type === "withdrawal"
+    ? -Math.abs(Number(item.amount))
+    : Number(item.amount)
+  ),0
+);
 
     const referral = wallet
       .filter(item=>item.entry_type === "referral_reward")
@@ -1430,6 +1671,295 @@ function copyReferral() {
     .catch(()=>alert("Please copy referral link manually."));
 }
 
+  // =================================
+// AZDAR WITHDRAWAL SYSTEM
+// =================================
+
+async function getWithdrawalBalance(){
+
+  const {data,error} = await db
+    .from("wallet_ledger")
+    .select("amount,entry_type")
+    .eq("user_id",currentUser.id);
+
+  if(error) throw error;
+
+  return (data || []).reduce((total,item)=>{
+    const amount = Number(item.amount);
+    return total + (
+      item.entry_type === "withdrawal"
+      ? -Math.abs(amount)
+      : amount
+    );
+  },0);
+}
+
+async function refreshWithdrawalBalance(){
+
+  if(!currentUser) return;
+
+  try{
+    const balance = await getWithdrawalBalance();
+
+    document.getElementById("withdrawAvailable").textContent =
+      "Rs. " + balance.toLocaleString("en-PK");
+
+    document.getElementById("balance").textContent =
+      "Rs. " + balance.toLocaleString("en-PK");
+
+  }catch(error){
+    console.error(error);
+  }
+}
+
+// MEMBER WITHDRAWAL REQUEST
+document.getElementById("withdrawForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  const amount = Number(
+    document.getElementById("withdrawAmount").value
+  );
+
+  const method =
+    document.getElementById("withdrawMethod").value;
+
+  const title =
+    document.getElementById("withdrawTitle").value.trim();
+
+  const number =
+    document.getElementById("withdrawNumber").value.trim();
+
+  const button = document.getElementById("withdrawSubmit");
+
+  if(!currentUser){
+    message("withdrawMessage","Please login first.","error");
+    return;
+  }
+
+  if(!amount || amount <= 0 || !method || !title || !number){
+    message("withdrawMessage","Please enter all details correctly.","error");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "SUBMITTING...";
+
+  try{
+
+    const {data,error} = await db.rpc(
+      "request_withdrawal",
+      {
+        p_amount:amount,
+        p_payment_method:method,
+        p_account_title:title,
+        p_account_number:number
+      }
+    );
+
+    if(error) throw error;
+
+    if(data && data.success === false){
+      throw new Error(data.message || "Withdrawal request failed.");
+    }
+
+    message(
+      "withdrawMessage",
+      "Withdrawal request submitted successfully. Admin approval is pending.",
+      "success"
+    );
+
+    document.getElementById("withdrawForm").reset();
+
+    await refreshWithdrawalBalance();
+    await loadWithdrawalHistory();
+    await loadAdminData();
+
+  }catch(error){
+
+    message("withdrawMessage",error.message,"error");
+
+  }finally{
+
+    button.disabled = false;
+    button.textContent = "SUBMIT WITHDRAWAL";
+
+  }
+
+});
+
+// MEMBER WITHDRAWAL HISTORY
+async function loadWithdrawalHistory(){
+
+  const list = document.getElementById("withdrawHistory");
+
+  if(!currentUser) return;
+
+  list.textContent = "Loading...";
+
+  const {data,error} = await db
+    .from("withdrawals")
+    .select("id,amount,payment_method,account_title,account_number,status,admin_note,created_at")
+    .eq("user_id",currentUser.id)
+    .order("created_at",{ascending:false});
+
+  if(error){
+    list.textContent = "Error: " + error.message;
+    return;
+  }
+
+  list.replaceChildren();
+
+  if(!data || !data.length){
+    list.textContent = "No withdrawal requests yet.";
+    return;
+  }
+
+  data.forEach(item=>{
+
+    const card = document.createElement("div");
+    card.className = "withdraw-record";
+
+    const details = [
+      "Amount: Rs. " + Number(item.amount).toLocaleString("en-PK"),
+      "Method: " + item.payment_method,
+      "Account Title: " + item.account_title,
+      "Account Number: " + item.account_number,
+      "Date: " + new Date(item.created_at).toLocaleString(),
+      "Status: " + item.status.toUpperCase()
+    ];
+
+    details.forEach(value=>{
+      const p = document.createElement("p");
+      p.textContent = value;
+      card.appendChild(p);
+    });
+
+    if(item.admin_note){
+      const note = document.createElement("p");
+      note.textContent = "Admin Note: " + item.admin_note;
+      card.appendChild(note);
+    }
+
+    list.appendChild(card);
+
+  });
+
+}
+
+// ADMIN WITHDRAWAL MANAGEMENT
+async function loadAdminWithdrawals(){
+
+  const list = document.getElementById("adminWithdrawalList");
+
+  if(!currentProfile || currentProfile.role !== "admin") return;
+
+  list.textContent = "Loading requests...";
+
+  const {data,error} = await db
+    .from("withdrawals")
+    .select("*")
+    .in("status",["pending","processing"])
+    .order("created_at",{ascending:true});
+
+  if(error){
+    list.textContent = "Error: " + error.message;
+    return;
+  }
+
+  list.replaceChildren();
+
+  if(!data || !data.length){
+    list.textContent = "No pending withdrawal requests.";
+    return;
+  }
+
+  for(const item of data){
+
+    const member = await db
+      .from("profiles")
+      .select("full_name,phone")
+      .eq("id",item.user_id)
+      .maybeSingle();
+
+    const card = document.createElement("div");
+    card.className = "withdraw-record";
+
+    const details = [
+      "Member: " + (member.data?.full_name || "Unknown"),
+      "Phone: " + (member.data?.phone || "Not available"),
+      "Amount: Rs. " + Number(item.amount).toLocaleString("en-PK"),
+      "Method: " + item.payment_method,
+      "Account Title: " + item.account_title,
+      "Account Number: " + item.account_number,
+      "Status: " + item.status.toUpperCase(),
+      "Date: " + new Date(item.created_at).toLocaleString()
+    ];
+
+    details.forEach(value=>{
+      const p = document.createElement("p");
+      p.textContent = value;
+      card.appendChild(p);
+    });
+
+    async function updateWithdrawal(status){
+
+      if(!confirm("Change withdrawal status to " + status + "?")) return;
+
+      const note = status === "paid"
+        ? "Payment sent by admin"
+        : status === "rejected"
+        ? "Withdrawal rejected"
+        : "Withdrawal is being processed";
+
+      const {error:updateError} = await db
+        .from("withdrawals")
+        .update({
+          status:status,
+          admin_note:note
+        })
+        .eq("id",item.id)
+        .eq("status",item.status);
+
+      if(updateError){
+        alert("Error: " + updateError.message);
+        return;
+      }
+
+      alert("Withdrawal updated: " + status);
+      await loadAdminWithdrawals();
+      await loadAdminData();
+
+    }
+
+    const actions = document.createElement("div");
+
+    if(item.status === "pending"){
+
+      const processing = document.createElement("button");
+      processing.textContent = "Processing";
+      processing.onclick = ()=>updateWithdrawal("processing");
+      actions.appendChild(processing);
+
+    }
+
+    const paid = document.createElement("button");
+    paid.textContent = "Mark Paid";
+    paid.onclick = ()=>updateWithdrawal("paid");
+
+    const reject = document.createElement("button");
+    reject.textContent = "Reject";
+    reject.onclick = ()=>updateWithdrawal("rejected");
+
+    actions.append(paid,reject);
+    card.appendChild(actions);
+    list.appendChild(card);
+
+  }
+
+}
+  
 // =================================
 // LOGOUT
 // =================================
