@@ -721,6 +721,102 @@ footer{
 })();
 </script>
 <!-- AZDAR ADMIN DEPOSIT APPROVAL END -->
+
+  
+<!-- AZDAR MEMBER DEPOSIT HISTORY START -->
+<section id="azMemberHistory" style="margin:20px 0">
+  <div class="deposit-card">
+    <h2 style="color:#00e5ff">My Deposit History</h2>
+    <button type="button" id="azHistoryRefresh">
+      Refresh History
+    </button>
+    <div id="azHistoryList">Loading history...</div>
+  </div>
+</section>
+
+<script>
+(async function () {
+  const db = window.supabase.createClient(
+    "https://wtkcuyireeeuvckcyjys.supabase.co",
+    "sb_publishable_1TaAxn0Uq3X36v0YE4YltA_y0l5HILt"
+  );
+
+  const list = document.getElementById("azHistoryList");
+  const refresh = document.getElementById("azHistoryRefresh");
+
+  async function loadHistory() {
+    list.textContent = "Loading...";
+
+    const { data: auth, error: authError } =
+      await db.auth.getUser();
+
+    if (authError || !auth.user) {
+      list.textContent = "Please login to view your deposits.";
+      return;
+    }
+
+    const { data, error } = await db
+      .from("deposits")
+      .select("id,plan_id,amount,payment_method,transaction_reference,status,created_at")
+      .eq("user_id", auth.user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      list.textContent = "Error: " + error.message;
+      return;
+    }
+
+    list.replaceChildren();
+
+    if (!data || data.length === 0) {
+      list.textContent = "No deposit history found.";
+      return;
+    }
+
+    for (const item of data) {
+      const plan = await db
+        .from("plans")
+        .select("name")
+        .eq("id", item.plan_id)
+        .maybeSingle();
+
+      const card = document.createElement("div");
+      card.style.cssText =
+        "background:#07111f;border:1px solid #263c58;" +
+        "border-radius:10px;padding:14px;margin:12px 0;color:white";
+
+      const fields = [
+        "Plan: " + (plan.data?.name || "Unknown"),
+        "Amount: Rs. " + item.amount,
+        "Payment: " + item.payment_method,
+        "Transaction: " + item.transaction_reference,
+        "Date: " + new Date(item.created_at).toLocaleString()
+      ];
+
+      fields.forEach(value => {
+        const p = document.createElement("p");
+        p.textContent = value;
+        card.appendChild(p);
+      });
+
+      const status = document.createElement("p");
+      const state = String(item.status || "pending").toLowerCase();
+      status.textContent = "Status: " + state.toUpperCase();
+      status.style.fontWeight = "bold";
+      status.style.color =
+        state === "approved" ? "#00e5a0" :
+        state === "rejected" ? "#ff7070" : "#ffd166";
+
+      card.appendChild(status);
+      list.appendChild(card);
+    }
+  }
+
+  refresh.addEventListener("click", loadHistory);
+  await loadHistory();
+})();
+</script>
+<!-- AZDAR MEMBER DEPOSIT HISTORY END -->
   
   
 <h2 class="section-title">Membership Plans</h2>
