@@ -361,6 +361,202 @@ footer{
 <button class="btn btn-full" onclick="copyReferral()">COPY REFERRAL LINK</button>
 </div>
 
+  
+<!-- AZDAR DEPOSIT SYSTEM START -->
+<section id="azDeposit" class="section">
+  <h2 class="section-title">Activate Your Plan</h2>
+
+  <div class="deposit-card">
+    <h3>Payment Details</h3>
+
+    <div class="payment-method">
+      <strong>JazzCash</strong>
+      <p>Account Title: Azmat Ali</p>
+      <p>Account Number: 03002867506</p>
+    </div>
+
+    <div class="payment-method">
+      <strong>Easypaisa</strong>
+      <p>Account Title: Azmat Ali</p>
+      <p>Account Number: 03208722726</p>
+    </div>
+
+    <h3>Submit Deposit</h3>
+
+    <form id="azDepositForm">
+      <label>Select Plan</label>
+      <select id="azPlan" required>
+        <option value="">Loading plans...</option>
+      </select>
+
+      <label>Payment Method</label>
+      <select id="azMethod" required>
+        <option value="">Select Payment Method</option>
+        <option value="JazzCash">JazzCash</option>
+        <option value="Easypaisa">Easypaisa</option>
+      </select>
+
+      <label>Transaction ID / Reference</label>
+      <input id="azTransaction" type="text"
+        placeholder="Enter transaction ID" required>
+
+      <label>Payment Proof URL (optional)</label>
+      <input id="azProof" type="url"
+        placeholder="Paste image link if available">
+
+      <button type="submit" id="azSubmit">
+        Submit Deposit Request
+      </button>
+    </form>
+
+    <p id="azDepositMessage"></p>
+  </div>
+</section>
+
+<style>
+#azDeposit {
+  margin: 20px 0;
+}
+#azDeposit .deposit-card {
+  background: #101d30;
+  border: 1px solid #263c58;
+  border-radius: 15px;
+  padding: 18px;
+  color: #f5f8ff;
+}
+#azDeposit h3 {
+  color: #00e5ff;
+  margin: 12px 0;
+}
+#azDeposit .payment-method {
+  background: #07111f;
+  border: 1px solid #a855f7;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+#azDeposit .payment-method p {
+  margin: 7px 0;
+}
+#azDeposit label {
+  display: block;
+  margin: 14px 0 6px;
+}
+#azDeposit input,
+#azDeposit select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #40516b;
+  background: #07111f;
+  color: white;
+}
+#azDeposit button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg,#00bcd4,#a855f7);
+  color: white;
+  font-weight: bold;
+}
+</style>
+
+<script>
+(async function () {
+  const depositDB = window.supabase.createClient(
+    "https://wtkcuyireeeuvckcyjys.supabase.co",
+    "sb_publishable_1TaAxn0Uq3X36v0YE4YltA_y0l5HILt"
+  );
+
+  const planSelect = document.getElementById("azPlan");
+  const form = document.getElementById("azDepositForm");
+  const message = document.getElementById("azDepositMessage");
+  const submit = document.getElementById("azSubmit");
+
+  const { data: plans, error } = await depositDB
+    .from("plans")
+    .select("id,name,price")
+    .eq("active", true)
+    .order("price");
+
+  if (error) {
+    planSelect.innerHTML =
+      '<option value="">Could not load plans</option>';
+    message.textContent = error.message;
+    return;
+  }
+
+  planSelect.innerHTML =
+    '<option value="">Select Your Plan</option>';
+
+  (plans || []).forEach(plan => {
+    const option = document.createElement("option");
+    option.value = plan.id;
+    option.textContent =
+      plan.name + " - Rs. " + Number(plan.price).toLocaleString();
+    option.dataset.price = plan.price;
+    planSelect.appendChild(option);
+  });
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    submit.disabled = true;
+    submit.textContent = "Submitting...";
+    message.textContent = "";
+
+    try {
+      const { data: userData, error: userError } =
+        await depositDB.auth.getUser();
+
+      if (userError || !userData.user) {
+        throw new Error("Please login first.");
+      }
+
+      const selected = planSelect.options[planSelect.selectedIndex];
+
+      if (!selected.value) {
+        throw new Error("Please select a plan.");
+      }
+
+      const deposit = {
+        user_id: userData.user.id,
+        plan_id: selected.value,
+        amount: Number(selected.dataset.price),
+        payment_method: document.getElementById("azMethod").value,
+        transaction_reference:
+          document.getElementById("azTransaction").value.trim(),
+        proof_url:
+          document.getElementById("azProof").value.trim() || null,
+        status: "pending"
+      };
+
+      const { error: insertError } = await depositDB
+        .from("deposits")
+        .insert(deposit);
+
+      if (insertError) throw insertError;
+
+      message.style.color = "#00e5a0";
+      message.textContent =
+        "Deposit request submitted! Admin approval is pending.";
+
+      form.reset();
+
+    } catch (err) {
+      message.style.color = "#ff7070";
+      message.textContent = err.message;
+    }
+
+    submit.disabled = false;
+    submit.textContent = "Submit Deposit Request";
+  });
+})();
+</script>
+<!-- AZDAR DEPOSIT SYSTEM END -->
+  
 <h2 class="section-title">Membership Plans</h2>
 
 <div class="plan-grid">
