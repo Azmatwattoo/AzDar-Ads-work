@@ -316,6 +316,17 @@ footer{
 </div>
 </div>
 
+  <div class="card">
+  <h3>My Active Membership</h3>
+  <p class="muted">Plan Name</p>
+  <h2 id="memberPlanName">None</h2>
+  <p class="muted">Plan Price</p>
+  <h3 id="memberPlanPrice">Rs. 0</h3>
+  <p class="muted">Activation Date</p>
+  <strong id="memberPlanDate">Not Activated</strong>
+  <p class="badge">Lifetime Membership</p>
+  </div>
+  
 <div id="adminPanel" class="card hidden">
 <h2 class="gradient">Admin Dashboard</h2>
 <p class="muted">Main Administrator Controls</p>
@@ -1123,15 +1134,28 @@ async function loadMemberData() {
 
   const {data:membership} = await db
     .from("memberships")
-    .select("status,plans(name)")
+    .select("status,activated_at,plans(name,price)")
     .eq("user_id",currentUser.id)
     .eq("status","active")
     .order("activated_at",{ascending:false})
     .limit(1)
     .maybeSingle();
 
-  document.getElementById("activePlan").textContent =
+document.getElementById("activePlan").textContent =
     membership?.plans?.name || "None";
+
+document.getElementById("memberPlanName").textContent =
+    membership?.plans?.name || "None";
+
+document.getElementById("memberPlanPrice").textContent =
+    membership?.plans?.price
+    ? "Rs. " + Number(membership.plans.price).toLocaleString("en-PK")
+    : "Rs. 0";
+
+document.getElementById("memberPlanDate").textContent =
+    membership?.activated_at
+    ? new Date(membership.activated_at).toLocaleDateString("en-PK")
+    : "Not Activated";
 
   const {data:transactions,error} = await db
     .from("wallet_ledger")
