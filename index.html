@@ -556,6 +556,172 @@ footer{
 })();
 </script>
 <!-- AZDAR DEPOSIT SYSTEM END -->
+
+  
+<!-- AZDAR ADMIN DEPOSIT APPROVAL START -->
+<section id="azAdminDeposits" style="display:none;margin:20px 0">
+  <div class="deposit-card">
+    <h2 style="color:#00e5ff">Admin - Deposit Requests</h2>
+    <button id="azRefreshDeposits">Refresh Requests</button>
+    <div id="azPendingList">Loading...</div>
+  </div>
+</section>
+
+<script>
+(async function () {
+  const db = window.supabase.createClient(
+    "https://wtkcuyireeeuvckcyjys.supabase.co",
+    "sb_publishable_1TaAxn0Uq3X36v0YE4YltA_y0l5HILt"
+  );
+
+  const panel = document.getElementById("azAdminDeposits");
+  const list = document.getElementById("azPendingList");
+  const refresh = document.getElementById("azRefreshDeposits");
+
+  const { data: authData, error: authError } =
+    await db.auth.getUser();
+
+  if (authError || !authData.user) return;
+
+  const user = authData.user;
+
+  const { data: profile, error: profileError } = await db
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || profile?.role !== "admin") return;
+
+  panel.style.display = "block";
+
+  async function loadRequests() {
+    list.textContent = "Loading requests...";
+
+    const { data: deposits, error } = await db
+      .from("deposits")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      list.textContent = "Error: " + error.message;
+      return;
+    }
+
+    list.replaceChildren();
+
+    if (!deposits || deposits.length === 0) {
+      list.textContent = "No pending deposit requests.";
+      return;
+    }
+
+    for (const deposit of deposits) {
+      const card = document.createElement("div");
+      card.style.cssText =
+        "background:#07111f;border:1px solid #a855f7;" +
+        "border-radius:10px;padding:14px;margin:12px 0;color:white";
+
+      const planResult = await db
+        .from("plans")
+        .select("name")
+        .eq("id", deposit.plan_id)
+        .maybeSingle();
+
+      const memberResult = await db
+        .from("profiles")
+        .select("full_name,phone")
+        .eq("id", deposit.user_id)
+        .maybeSingle();
+
+      const details = [
+        "Member: " + (memberResult.data?.full_name || "Unknown"),
+        "Phone: " + (memberResult.data?.phone || "Not available"),
+        "Plan: " + (planResult.data?.name || "Unknown"),
+        "Amount: Rs. " + deposit.amount,
+        "Method: " + deposit.payment_method,
+        "Transaction: " + deposit.transaction_reference,
+        "Submitted: " + new Date(deposit.created_at).toLocaleString()
+      ];
+
+      details.forEach(value => {
+        const p = document.createElement("p");
+        p.textContent = value;
+        card.appendChild(p);
+      });
+
+      if (deposit.proof_url) {
+        const proof = document.createElement("a");
+        proof.href = deposit.proof_url;
+        proof.target = "_blank";
+        proof.rel = "noopener noreferrer";
+        proof.textContent = "Open Payment Proof";
+        proof.style.color = "#00e5ff";
+        card.appendChild(proof);
+      }
+
+      const actions = document.createElement("div");
+      actions.style.cssText =
+        "display:flex;gap:10px;margin-top:15px";
+
+      const approve = document.createElement("button");
+      approve.textContent = "Approve";
+      approve.style.cssText =
+        "background:#087d55;color:white;padding:10px;" +
+        "border:0;border-radius:7px;flex:1";
+
+      const reject = document.createElement("button");
+      reject.textContent = "Reject";
+      reject.style.cssText =
+        "background:#a52b42;color:white;padding:10px;" +
+        "border:0;border-radius:7px;flex:1";
+
+      async function review(status) {
+        if (!confirm("Are you sure you want to " + status + "?"))
+          return;
+
+        approve.disabled = true;
+        reject.disabled = true;
+
+        const { error: updateError } = await db
+          .from("deposits")
+          .update({
+            status: status,
+            admin_note: status === "approved"
+              ? "Payment approved"
+              : "Payment rejected",
+            reviewed_by: user.id,
+            reviewed_at: new Date().toISOString()
+          })
+          .eq("id", deposit.id)
+          .eq("status", "pending");
+
+        if (updateError) {
+          alert("Error: " + updateError.message);
+          approve.disabled = false;
+          reject.disabled = false;
+          return;
+        }
+
+        alert("Request " + status + ".");
+        await loadRequests();
+      }
+
+      approve.onclick = () => review("approved");
+      reject.onclick = () => review("rejected");
+
+      actions.append(approve, reject);
+      card.appendChild(actions);
+      list.appendChild(card);
+    }
+  }
+
+  refresh.addEventListener("click", loadRequests);
+  await loadRequests();
+})();
+</script>
+<!-- AZDAR ADMIN DEPOSIT APPROVAL END -->
+  
   
 <h2 class="section-title">Membership Plans</h2>
 
