@@ -807,6 +807,61 @@ input:focus,select:focus {
     transition:none!important;
   }
   }
+
+/* AZDAR MOBILE PERFORMANCE FIX */
+
+@media(max-width:768px) {
+
+  body {
+    animation:none !important;
+    background:
+      radial-gradient(circle at top right,#35145b 0%,transparent 40%),
+      #070512 !important;
+  }
+
+  body::after {
+    display:none !important;
+  }
+
+  body::before {
+    opacity:.07 !important;
+    filter:blur(45px) !important;
+  }
+
+  .card,.stat,.plan,.withdraw-box,
+  .container {
+    animation:none !important;
+    transform:none !important;
+  }
+
+  .card::before,
+  .stat::before,
+  .plan::before {
+    animation:none !important;
+    opacity:.25 !important;
+  }
+
+  .card,.stat,.plan {
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    box-shadow:0 5px 16px #0006 !important;
+  }
+
+  button {
+    transition:background .2s ease !important;
+  }
+
+  button:hover {
+    transform:none !important;
+  }
+}
+
+/* Desktop remains animated */
+@media(min-width:769px) {
+  .card,.stat,.plan {
+    animation-duration:8s;
+  }
+}
 </style>
 </head>
 
