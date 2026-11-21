@@ -974,6 +974,11 @@ input:focus,select:focus {
 <small>Referral Earnings</small>
 <h2 id="referralBalance">Rs. 0</h2>
 </div>
+  <div class="stat">
+<small>Total Earning</small>
+<h2 id="totalEarning">Rs. 0</h2>
+<span class="badge">Lifetime Earnings</span>
+  </div>
 </div>
 
   <div class="card">
@@ -2275,6 +2280,17 @@ async function loadMemberData() {
       .filter(item=>item.entry_type === "referral_reward")
       .reduce((sum,item)=>sum + Number(item.amount),0);
 
+// LIFETIME TOTAL EARNING
+const lifetimeEarning = wallet
+  .filter(item =>
+    item.entry_type !== "withdrawal" &&
+    Number(item.amount) > 0
+  )
+  .reduce((sum,item) => sum + Number(item.amount), 0);
+
+document.getElementById("totalEarning").textContent =
+  "Rs. " + lifetimeEarning.toLocaleString("en-PK");
+    
     document.getElementById("balance").textContent =
       "Rs. " + total.toLocaleString("en-PK");
 
