@@ -1378,8 +1378,85 @@ async function loadDashboard(user) {
   }
 
   await loadMemberData();
+  await loadReferralTeam();
 }
 
+  
+// =================================
+// AZDAR REFERRAL TEAM
+// =================================
+
+async function loadReferralTeam() {
+  const list = document.getElementById("referralTeamList");
+
+  if (!currentUser) {
+    list.textContent = "Please login first.";
+    return;
+  }
+
+  list.textContent = "Loading team...";
+
+  const { data, error } = await db.rpc("get_my_referral_team");
+
+  if (error) {
+    list.textContent = "Team loading error: " + error.message;
+    return;
+  }
+
+  const members = data || [];
+
+  const active = members.filter(
+    member => member.member_status === "active"
+  ).length;
+
+  document.getElementById("teamTotal").textContent =
+    members.length;
+
+  document.getElementById("teamActive").textContent =
+    active;
+
+  document.getElementById("teamInactive").textContent =
+    members.length - active;
+
+  list.replaceChildren();
+
+  if (members.length === 0) {
+    list.textContent = "No direct referral members yet.";
+    return;
+  }
+
+  members.forEach(member => {
+    const card = document.createElement("div");
+
+    card.style.cssText =
+      "background:#07111f;border:1px solid #283651;" +
+      "border-radius:12px;padding:15px;margin:12px 0;";
+
+    const name = document.createElement("h3");
+    name.textContent = member.member_name || "Member";
+
+    const plan = document.createElement("p");
+    plan.textContent = "Plan: " + (member.plan_name || "Not Activated");
+
+    const status = document.createElement("p");
+    status.textContent =
+      "Status: " +
+      (member.member_status === "active" ? "Active" : "Not Active");
+
+    status.style.color =
+      member.member_status === "active" ? "#25d695" : "#ffb2c0";
+
+    const date = document.createElement("p");
+    date.textContent = "Joined: " +
+      (member.joining_date
+        ? new Date(member.joining_date).toLocaleDateString()
+        : "Unknown");
+
+    card.append(name, plan, status, date);
+    list.appendChild(card);
+  });
+}
+  
   
 // =================================
 // AZDAR DAILY VIDEO LOADER
