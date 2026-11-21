@@ -239,6 +239,367 @@ footer{
   margin:12px 0;
   overflow-wrap:anywhere;
 }
+
+  
+/* =====================================
+   AZDAR FUTURISTIC 3D REDESIGN
+   VISUAL UPGRADE ONLY
+===================================== */
+
+:root {
+  --bg:#070512;
+  --panel:#100d24;
+  --panel2:#1b1536;
+  --cyan:#00eaff;
+  --purple:#a855f7;
+  --white:#f8f5ff;
+  --muted:#b5a9cf;
+  --border:#49316b;
+  --green:#25e6a0;
+}
+
+/* Animated background */
+body {
+  background:
+    radial-gradient(ellipse at 10% 10%, #5520a044, transparent 40%),
+    radial-gradient(ellipse at 90% 40%, #006dff22, transparent 40%),
+    radial-gradient(ellipse at 50% 100%, #8b20c933, transparent 45%),
+    #070512;
+  background-size:200% 200%;
+  animation:azdarBackground 14s ease infinite;
+  position:relative;
+  isolation:isolate;
+}
+
+@keyframes azdarBackground {
+  0%,100% {background-position:0% 0%}
+  50% {background-position:100% 100%}
+}
+
+/* Floating ambient glow */
+body::before {
+  content:"";
+  position:fixed;
+  width:300px;
+  height:300px;
+  border-radius:50%;
+  background:#a855f7;
+  filter:blur(130px);
+  opacity:.13;
+  top:15%;
+  left:-150px;
+  pointer-events:none;
+  z-index:-1;
+  animation:azdarFloat 9s ease-in-out infinite alternate;
+}
+
+@keyframes azdarFloat {
+  from {transform:translate(0,0)}
+  to {transform:translate(180px,160px)}
+}
+
+/* Premium header */
+.topbar {
+  background:rgba(10,5,25,.85);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid #a855f755;
+  box-shadow:0 5px 35px #a855f722;
+}
+
+.brand {
+  background:linear-gradient(90deg,#00eaff,#c084fc,#00eaff);
+  background-size:200% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:azdarShine 4s linear infinite;
+}
+
+@keyframes azdarShine {
+  to {background-position:200% center}
+}
+
+/* Glass cards */
+.card {
+  background:linear-gradient(
+    145deg,
+    rgba(31,19,58,.92),
+    rgba(10,12,30,.94)
+  );
+  border:1px solid #a855f755;
+  border-radius:22px;
+  box-shadow:
+    0 12px 35px #0008,
+    inset 0 1px 1px #ffffff12,
+    0 0 20px #a855f711;
+  backdrop-filter:blur(15px);
+  -webkit-backdrop-filter:blur(15px);
+  transition:transform .35s ease,box-shadow .35s ease;
+}
+
+.card:hover {
+  transform:translateY(-4px);
+  box-shadow:
+    0 18px 45px #0009,
+    0 0 25px #a855f733;
+}
+
+/* Login and register */
+.auth-wrap {
+  border:1px solid #a855f788;
+  box-shadow:0 0 35px #a855f722,0 20px 60px #0008;
+  animation:azdarEntrance .8s ease both;
+}
+
+@keyframes azdarEntrance {
+  from {opacity:0;transform:translateY(25px) scale(.97)}
+  to {opacity:1;transform:translateY(0) scale(1)}
+}
+
+.auth-title {
+  font-size:30px;
+  text-shadow:0 0 25px #a855f766;
+}
+
+/* Input styling */
+input {
+  background:rgba(5,5,20,.85);
+  border:1px solid #62438a;
+  border-radius:13px;
+  transition:.3s ease;
+}
+
+input:focus {
+  border-color:var(--cyan);
+  box-shadow:0 0 0 3px #00eaff22,0 0 18px #00eaff33;
+  transform:translateY(-2px);
+}
+
+/* 3D buttons */
+.btn {
+  background:linear-gradient(110deg,#00eaff,#8b5cf6,#c084fc);
+  background-size:200% auto;
+  border-radius:13px;
+  box-shadow:0 5px 18px #8b5cf644;
+  transition:all .3s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.btn:hover {
+  background-position:right center;
+  transform:translateY(-3px);
+  box-shadow:0 9px 28px #8b5cf777;
+}
+
+.btn:active {
+  transform:scale(.97);
+}
+
+.btn-secondary {
+  background:linear-gradient(135deg,#21163c,#11152c);
+  border:1px solid #8b5cf677;
+  transition:.3s ease;
+}
+
+.btn-secondary:hover {
+  border-color:var(--cyan);
+  box-shadow:0 0 18px #00eaff33;
+  transform:translateY(-2px);
+}
+
+/* Hero section */
+.hero {
+  padding:45px 10px;
+  animation:azdarEntrance 1s ease both;
+}
+
+.hero h1 {
+  font-size:clamp(29px,5vw,43px);
+  text-shadow:0 0 30px #a855f744;
+}
+
+.gradient {
+  background:linear-gradient(90deg,#00eaff,#a855f7,#e879f9);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+
+/* Dashboard statistics */
+.stat {
+  background:linear-gradient(145deg,#21143c,#100e25);
+  border:1px solid #a855f755;
+  border-radius:19px;
+  box-shadow:0 8px 25px #0005;
+  transition:all .35s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.stat::before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:2px;
+  background:linear-gradient(90deg,transparent,#00eaff,#a855f7,transparent);
+}
+
+.stat:hover {
+  transform:translateY(-7px) scale(1.02);
+  border-color:var(--cyan);
+  box-shadow:0 12px 30px #8b5cf733;
+}
+
+.stat h2 {
+  color:#00eaff;
+  text-shadow:0 0 15px #00eaff44;
+}
+
+/* Membership plans */
+.plan {
+  background:linear-gradient(145deg,#241440,#100c22);
+  border:1px solid #a855f766;
+  border-radius:20px;
+  box-shadow:0 10px 30px #0006;
+  transition:all .35s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.plan::after {
+  content:"";
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:60%;
+  height:100%;
+  background:linear-gradient(90deg,transparent,#ffffff0d,transparent);
+  transform:skewX(-20deg);
+  transition:.7s;
+  pointer-events:none;
+}
+
+.plan:hover::after {
+  left:150%;
+}
+
+.plan:hover {
+  transform:translateY(-8px);
+  border-color:#00eaff;
+  box-shadow:0 15px 35px #a855f744;
+}
+
+.plan h3 {
+  color:#00eaff;
+  text-shadow:0 0 15px #00eaff55;
+}
+
+.price {
+  color:#e9b8ff;
+  text-shadow:0 0 20px #a855f755;
+}
+
+/* Badges */
+.badge {
+  background:linear-gradient(100deg,#312052,#172b49);
+  border:1px solid #a855f766;
+  box-shadow:0 0 12px #a855f722;
+}
+
+/* Navigation */
+.nav {
+  gap:12px;
+}
+
+.nav button {
+  transition:all .3s ease;
+}
+
+/* Tables */
+table {
+  border-radius:12px;
+  overflow:hidden;
+}
+
+th {
+  background:#24143d;
+  color:#00eaff;
+}
+
+td {
+  border-bottom:1px solid #49316b88;
+}
+
+tr:hover td {
+  background:#a855f711;
+}
+
+/* Section titles */
+.section-title {
+  color:#e9d5ff;
+  text-shadow:0 0 15px #a855f733;
+  border-left:3px solid #00eaff;
+  padding-left:12px;
+}
+
+/* Footer */
+footer {
+  border-top:1px solid #a855f744;
+  background:#08051288;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior:smooth;
+}
+
+/* Focus accessibility */
+button:focus-visible {
+  outline:2px solid var(--cyan);
+  outline-offset:4px;
+}
+
+/* Mobile optimization */
+@media(max-width:650px) {
+  .container {
+    width:94%;
+    margin:22px auto;
+  }
+
+  .hero {
+    padding:30px 5px;
+  }
+
+  .card {
+    border-radius:17px;
+  }
+
+  .stat {
+    padding:16px;
+  }
+
+  .plan {
+    padding:19px;
+  }
+
+  .topbar {
+    backdrop-filter:blur(18px);
+  }
+}
+
+/* Reduced motion accessibility */
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    scroll-behavior:auto!important;
+    transition-duration:.01ms!important;
+  }
+  }
 </style>
 </head>
 
