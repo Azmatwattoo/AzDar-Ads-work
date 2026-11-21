@@ -409,6 +409,38 @@ footer{
 <button class="btn btn-full" onclick="copyReferral()">COPY REFERRAL LINK</button>
 </div>
 
+  
+<!-- AZDAR REFERRAL TEAM START -->
+<section id="referralTeamSection" class="card">
+  <h2 class="gradient">My Referral Team</h2>
+  <p class="muted">Your direct invited members only.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <small>Total Direct Members</small>
+      <h2 id="teamTotal">0</h2>
+    </div>
+    <div class="stat">
+      <small>Active Members</small>
+      <h2 id="teamActive">0</h2>
+    </div>
+    <div class="stat">
+      <small>Not Active</small>
+      <h2 id="teamInactive">0</h2>
+    </div>
+  </div>
+
+  <button class="btn-secondary" onclick="loadReferralTeam()">
+    Refresh Team
+  </button>
+
+  <div id="referralTeamList" style="margin-top:15px">
+    Loading team...
+  </div>
+</section>
+<!-- AZDAR REFERRAL TEAM END -->
+  
+
   <!-- MEMBER WITHDRAWAL SECTION -->
 <section id="memberWithdrawal" class="withdraw-box">
 
