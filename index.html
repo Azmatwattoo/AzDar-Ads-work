@@ -2263,6 +2263,7 @@ async function loadDailyVideo() {
 // MEMBER DATA
 // =================================
 
+ 
 async function loadMemberData() {
 
   const {data:wallet,error:walletError} = await db
@@ -2275,28 +2276,30 @@ async function loadMemberData() {
   } else {
 
     const total = wallet.reduce(
-  (sum,item)=>sum + (
-    item.entry_type === "withdrawal"
-    ? -Math.abs(Number(item.amount))
-    : Number(item.amount)
-  ),0
-);
+      (sum,item)=>sum + (
+        item.entry_type === "withdrawal"
+        ? -Math.abs(Number(item.amount))
+        : Number(item.amount)
+      ),0
+    );
 
     const referral = wallet
-      .filter(item=>item.entry_type === "referral_reward")
+      .filter(item=>item.entry_type==="referral_reward")
       .reduce((sum,item)=>sum + Number(item.amount),0);
 
-// LIFETIME TOTAL EARNING
-const lifetimeEarning = wallet
-  .filter(item =>
-    item.entry_type !== "withdrawal" &&
-    Number(item.amount) > 0
-  )
-  .reduce((sum,item) => sum + Number(item.amount), 0);
+    // LIFETIME TOTAL EARNING - FIXED
+    // Refund adjustments are NOT counted as new earnings
+    const lifetimeEarning = wallet
+      .filter(item =>
+        ["ad_earning","ad_reward","referral_reward"]
+          .includes(item.entry_type) &&
+        Number(item.amount) > 0
+      )
+      .reduce((sum,item)=>sum + Number(item.amount),0);
 
-document.getElementById("totalEarning").textContent =
-  "Rs. " + lifetimeEarning.toLocaleString("en-PK");
-    
+    document.getElementById("totalEarning").textContent =
+      "Rs. " + lifetimeEarning.toLocaleString("en-PK");
+
     document.getElementById("balance").textContent =
       "Rs. " + total.toLocaleString("en-PK");
 
@@ -2373,6 +2376,7 @@ document.getElementById("totalEarning").textContent =
   await loadDailyVideo();
 }
   
+      
 // =================================
 // ADMIN DATA
 // =================================
