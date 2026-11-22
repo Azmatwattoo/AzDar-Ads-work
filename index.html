@@ -2781,5 +2781,19 @@ db.auth.onAuthStateChange((event,session)=>{
 
 </script>
 
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/service-worker.js")
+      .then(function (registration) {
+        console.log("AzDar App Ready:", registration.scope);
+      })
+      .catch(function (error) {
+        console.error("Service Worker Error:", error);
+      });
+  });
+}
+</script>
+  
 </body>
 </html>
