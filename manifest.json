@@ -1,0 +1,27 @@
+
+{
+  "id": "/",
+  "name": "AzDar Ads Watching",
+  "short_name": "AzDar Ads",
+  "description": "AzDar Digital Network - Ads Watching Platform",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070512",
+  "theme_color": "#070512",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
