@@ -2289,6 +2289,9 @@ async function loadMemberData() {
 
     // LIFETIME TOTAL EARNING - FIXED
     // Refund adjustments are NOT counted as new earnings
+
+    console.log("WALLET DATA:", wallet);
+    
     const lifetimeEarning = wallet
       .filter(item =>
         ["ad_earning","ad_reward","referral_reward"]
@@ -2296,7 +2299,9 @@ async function loadMemberData() {
         Number(item.amount) > 0
       )
       .reduce((sum,item)=>sum + Number(item.amount),0);
-
+    
+    console.log("LIFETIME EARNING:", lifetimeEarning);
+    
     document.getElementById("totalEarning").textContent =
       "Rs. " + lifetimeEarning.toLocaleString("en-PK");
 
