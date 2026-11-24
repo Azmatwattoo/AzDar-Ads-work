@@ -1660,18 +1660,27 @@ input:focus,select:focus {
 
         if(!confirm("Are you sure you want to mark this request " + status + "?")) return;
 
-        const {error:updateError} = await db
-          .from("withdrawals")
-          .update({
-            status:status,
-            admin_note:status === "paid"
-              ? "Payment sent by admin"
-              : status === "rejected"
-              ? "Withdrawal rejected"
-              : "Withdrawal is being processed"
-          })
-          .eq("id",item.id)
-          .eq("status",item.status);
+        
+const updateData = {
+  status: status,
+  admin_note: status === "paid"
+    ? "Payment sent by admin"
+    : status === "rejected"
+    ? "Withdrawal rejected"
+    : "Withdrawal is being processed"
+};
+
+// Save actual payment date when marked Paid
+if (status === "paid") {
+  updateData.reviewed_at = new Date().toISOString();
+}
+
+const {error:updateError} = await db
+  .from("withdrawals")
+  .update(updateData)
+  .eq("id",item.id)
+  .eq("status",item.status);
+        
 
         if(updateError){
           alert("Error: " + updateError.message);
