@@ -1018,7 +1018,47 @@ input:focus,select:focus {
 </div>
 </div>
 
-<p class="muted">Detailed deposit and withdrawal approvals will be added in the next development stage.</p>
+
+<hr>
+<h2 style="color:#00e5ff">➕ Add New Member</h2>
+<p class="muted">Create member account and activate plan</p>
+
+<form id="adminAddMemberForm">
+
+  <label>Full Name</label>
+  <input id="newMemberName" type="text"
+    placeholder="Member full name" required>
+
+  <label>Email / Gmail</label>
+  <input id="newMemberEmail" type="email"
+    placeholder="member@gmail.com" required>
+
+  <label>Phone Number</label>
+  <input id="newMemberPhone" type="tel"
+    placeholder="03XXXXXXXXX" required>
+
+  <label>Password</label>
+  <input id="newMemberPassword" type="password"
+    minlength="8" placeholder="Create password" required>
+
+  <label>Select Plan</label>
+  <select id="newMemberPlan" required>
+    <option value="">Loading plans...</option>
+  </select>
+
+  <label>Refer By (Optional)</label>
+  <input id="newMemberReferral" type="text"
+    placeholder="Enter referral code">
+
+  <button class="btn btn-full" type="submit">
+    CREATE ACCOUNT & ACTIVATE PLAN
+  </button>
+
+  <div id="adminAddMemberMessage" class="message"></div>
+
+</form>
+<hr>
+  
 </div>
 
 <div class="card">
