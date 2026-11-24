@@ -2632,6 +2632,7 @@ const pendingWithdrawalRows = withdrawalRows.filter(x => x.status === "Pending")
       timeZone: "Asia/Karachi",
       year: "numeric",
 
+
 // =================================
 // ADMIN DATA + FINANCIAL OVERVIEW
 // =================================
@@ -2654,15 +2655,20 @@ async function loadAdminData() {
 
   ]);
 
+  // Check database errors
   if (members.error || deposits.error || withdrawals.error) {
+
     console.error(
       "Admin financial data error:",
       members.error || deposits.error || withdrawals.error
     );
 
     const status = document.getElementById("financialStatus");
-    if (status) status.textContent =
-      "Unable to load financial data. Check Supabase permissions.";
+
+    if (status) {
+      status.textContent =
+        "Unable to load financial data. Check Supabase permissions.";
+    }
 
     return;
   }
@@ -2675,26 +2681,28 @@ async function loadAdminData() {
     members.count ?? "-";
 
   document.getElementById("pendingDeposits").textContent =
-    depositRows.filter(x => x.status === "Pending").length;
+    depositRows.filter(x => x.status === "pending").length;
 
   document.getElementById("pendingWithdrawals").textContent =
-    withdrawalRows.filter(x => x.status === "Pending").length;
+    withdrawalRows.filter(x => x.status === "pending").length;
 
   // Status totals
   const approvedDeposits =
-    depositRows.filter(x => x.status === "Approved");
+    depositRows.filter(x => x.status === "approved");
 
   const paidWithdrawals =
-    withdrawalRows.filter(x => x.status === "Paid");
+    withdrawalRows.filter(x => x.status === "paid");
 
   const pendingDepositRows =
-    depositRows.filter(x => x.status === "Pending");
+    depositRows.filter(x => x.status === "pending");
 
   const pendingWithdrawalRows =
-    withdrawalRows.filter(x => x.status === "Pending");
+    withdrawalRows.filter(x => x.status === "pending");
 
+  // Calculate amounts
   const sum = rows => rows.reduce(
-    (total, row) => total + Number(row.amount || 0), 0
+    (total, row) => total + Number(row.amount || 0),
+    0
   );
 
   // Pakistan local date
@@ -2708,49 +2716,84 @@ async function loadAdminData() {
   const month = today.slice(0, 7);
 
   // Approval/payment date
-  const isToday = row =>
-    row.reviewed_at &&
-    new Intl.DateTimeFormat("en-CA", {
+  const isToday = row => {
+
+    if (!row.reviewed_at) return false;
+
+    return new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Karachi",
       year: "numeric",
       month: "2-digit",
       day: "2-digit"
     }).format(new Date(row.reviewed_at)) === today;
 
-  const isThisMonth = row =>
-    row.reviewed_at &&
-    new Intl.DateTimeFormat("en-CA", {
+  };
+
+  const isThisMonth = row => {
+
+    if (!row.reviewed_at) return false;
+
+    return new Intl.DateTimeFormat("en-CA", {
       timeZone: "Asia/Karachi",
       year: "numeric",
       month: "2-digit"
     }).format(new Date(row.reviewed_at)) === month;
 
-  // Financial overview
-  const values = {
-    finTotalDeposits: sum(approvedDeposits),
-    finTotalWithdrawals: sum(paidWithdrawals),
-    finPendingDeposits: sum(pendingDepositRows),
-    finPendingWithdrawals: sum(pendingWithdrawalRows),
-    finTodayDeposits: sum(approvedDeposits.filter(isToday)),
-    finTodayWithdrawals: sum(paidWithdrawals.filter(isToday)),
-    finMonthDeposits: sum(approvedDeposits.filter(isThisMonth)),
-    finMonthWithdrawals: sum(paidWithdrawals.filter(isThisMonth))
   };
 
+  // Financial overview
+  const values = {
+
+    finTotalDeposits:
+      sum(approvedDeposits),
+
+    finTotalWithdrawals:
+      sum(paidWithdrawals),
+
+    finPendingDeposits:
+      sum(pendingDepositRows),
+
+    finPendingWithdrawals:
+      sum(pendingWithdrawalRows),
+
+    finTodayDeposits:
+      sum(approvedDeposits.filter(isToday)),
+
+    finTodayWithdrawals:
+      sum(paidWithdrawals.filter(isToday)),
+
+    finMonthDeposits:
+      sum(approvedDeposits.filter(isThisMonth)),
+
+    finMonthWithdrawals:
+      sum(paidWithdrawals.filter(isThisMonth))
+
+  };
+
+  // Update dashboard amounts
   Object.entries(values).forEach(([id, amount]) => {
+
     const element = document.getElementById(id);
-    if (element) element.textContent = money(amount);
+
+    if (element) {
+      element.textContent = money(amount);
+    }
+
   });
 
+  // Success message
   const status = document.getElementById("financialStatus");
-  if (status) status.textContent =
-    "Financial data updated successfully.";
+
+  if (status) {
+    status.textContent =
+      "Financial data updated successfully.";
+  }
+
 }
 
 // =================================
 // COPY FUNCTIONS
 // =================================
-      
 
 function copyText(id) {
 
