@@ -2550,40 +2550,207 @@ async function loadMemberData() {
   await loadDailyVideo();
 }
   
-      
+
 // =================================
-// ADMIN DATA
+// ADMIN DATA + FINANCIAL OVERVIEW
 // =================================
 
 async function loadAdminData() {
 
-  const members = await db
-    .from("profiles")
-    .select("*",{count:"exact",head:true});
+  const money = value =>
+    "Rs. " + Number(value || 0).toLocaleString("en-PK");
 
-  const deposits = await db
-    .from("deposits")
-    .select("*",{count:"exact",head:true})
-    .eq("status","pending");
+  const [members, deposits, withdrawals] = await Promise.all([
 
-  const withdrawals = await db
-    .from("withdrawals")
-    .select("*",{count:"exact",head:true})
-    .eq("status","pending");
+    db.from("profiles")
+      .select("*", { count: "exact", head: true }),
 
+    db.from("deposits")
+  .select("amount,status,created_at,reviewed_at"),
+
+db.from("withdrawals")
+  .select("amount,status,created_at,reviewed_at")
+
+  ]);
+
+  if (members.error || deposits.error || withdrawals.error) {
+    console.error(
+      "Admin financial data error:",
+      members.error || deposits.error || withdrawals.error
+    );
+    const status = document.getElementById("financialStatus");
+    if (status) status.textContent =
+      "Unable to load financial data. Check Supabase permissions.";
+    return;
+  }
+
+  const depositRows = deposits.data || [];
+  const withdrawalRows = withdrawals.data || [];
+
+  // Existing admin statistics
   document.getElementById("totalMembers").textContent =
     members.count ?? "-";
 
   document.getElementById("pendingDeposits").textContent =
-    deposits.count ?? "-";
+    depositRows.filter(x => x.status === "pending").length;
 
   document.getElementById("pendingWithdrawals").textContent =
-    withdrawals.count ?? "-";
+    withdrawalRows.filter(x => x.status === "pending").length;
+
+  // Status totals
+  const approvedDeposits = depositRows.filter(x => x.status === "Approved");
+const paidWithdrawals = withdrawalRows.filter(x => x.status === "Paid");
+const pendingDepositRows = depositRows.filter(x => x.status === "Pending");
+const pendingWithdrawalRows = withdrawalRows.filter(x => x.status === "Pending");
+
+  const sum = rows => rows.reduce(
+    (total, row) => total + Number(row.amount || 0), 0
+  );
+
+  // Pakistan local date
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+
+  const month = today.slice(0, 7);
+
+  const isToday = row =>
+    row.reviewed_at &&
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Karachi",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date(row.created_at)) === today;
+
+  const isThisMonth = row =>
+    row.reviewed_at &&
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Karachi",
+      year: "numeric",
+
+// =================================
+// ADMIN DATA + FINANCIAL OVERVIEW
+// =================================
+
+async function loadAdminData() {
+
+  const money = value =>
+    "Rs. " + Number(value || 0).toLocaleString("en-PK");
+
+  const [members, deposits, withdrawals] = await Promise.all([
+
+    db.from("profiles")
+      .select("*", { count: "exact", head: true }),
+
+    db.from("deposits")
+      .select("amount,status,created_at,reviewed_at"),
+
+    db.from("withdrawals")
+      .select("amount,status,created_at,reviewed_at")
+
+  ]);
+
+  if (members.error || deposits.error || withdrawals.error) {
+    console.error(
+      "Admin financial data error:",
+      members.error || deposits.error || withdrawals.error
+    );
+
+    const status = document.getElementById("financialStatus");
+    if (status) status.textContent =
+      "Unable to load financial data. Check Supabase permissions.";
+
+    return;
+  }
+
+  const depositRows = deposits.data || [];
+  const withdrawalRows = withdrawals.data || [];
+
+  // Existing admin statistics
+  document.getElementById("totalMembers").textContent =
+    members.count ?? "-";
+
+  document.getElementById("pendingDeposits").textContent =
+    depositRows.filter(x => x.status === "Pending").length;
+
+  document.getElementById("pendingWithdrawals").textContent =
+    withdrawalRows.filter(x => x.status === "Pending").length;
+
+  // Status totals
+  const approvedDeposits =
+    depositRows.filter(x => x.status === "Approved");
+
+  const paidWithdrawals =
+    withdrawalRows.filter(x => x.status === "Paid");
+
+  const pendingDepositRows =
+    depositRows.filter(x => x.status === "Pending");
+
+  const pendingWithdrawalRows =
+    withdrawalRows.filter(x => x.status === "Pending");
+
+  const sum = rows => rows.reduce(
+    (total, row) => total + Number(row.amount || 0), 0
+  );
+
+  // Pakistan local date
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+
+  const month = today.slice(0, 7);
+
+  // Approval/payment date
+  const isToday = row =>
+    row.reviewed_at &&
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Karachi",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date(row.reviewed_at)) === today;
+
+  const isThisMonth = row =>
+    row.reviewed_at &&
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Karachi",
+      year: "numeric",
+      month: "2-digit"
+    }).format(new Date(row.reviewed_at)) === month;
+
+  // Financial overview
+  const values = {
+    finTotalDeposits: sum(approvedDeposits),
+    finTotalWithdrawals: sum(paidWithdrawals),
+    finPendingDeposits: sum(pendingDepositRows),
+    finPendingWithdrawals: sum(pendingWithdrawalRows),
+    finTodayDeposits: sum(approvedDeposits.filter(isToday)),
+    finTodayWithdrawals: sum(paidWithdrawals.filter(isToday)),
+    finMonthDeposits: sum(approvedDeposits.filter(isThisMonth)),
+    finMonthWithdrawals: sum(paidWithdrawals.filter(isThisMonth))
+  };
+
+  Object.entries(values).forEach(([id, amount]) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = money(amount);
+  });
+
+  const status = document.getElementById("financialStatus");
+  if (status) status.textContent =
+    "Financial data updated successfully.";
 }
 
 // =================================
 // COPY FUNCTIONS
 // =================================
+      
 
 function copyText(id) {
 
