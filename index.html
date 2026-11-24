@@ -2098,7 +2098,7 @@ if (addMemberForm) {
 
     try {
       const { data, error } = await db.functions.invoke(
-        "admin-create-member",
+        "rapid-worker",
         {
           body: {
             name: document.getElementById("newMemberName").value.trim(),
