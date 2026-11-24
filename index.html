@@ -2062,6 +2062,8 @@ if (addMemberForm) {
   const planSelect = document.getElementById("newMemberPlan");
   const result = document.getElementById("adminAddMemberMessage");
 
+  result.style.display = "block";
+  
   async function loadAddMemberPlans() {
     const { data, error } = await db
       .from("plans")
