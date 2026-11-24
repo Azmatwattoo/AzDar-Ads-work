@@ -2056,6 +2056,92 @@ async function loadDashboard(user) {
 }
 
   
+const addMemberForm = document.getElementById("adminAddMemberForm");
+
+if (addMemberForm) {
+  const planSelect = document.getElementById("newMemberPlan");
+  const result = document.getElementById("adminAddMemberMessage");
+
+  async function loadAddMemberPlans() {
+    const { data, error } = await db
+      .from("plans")
+      .select("id,name,price")
+      .eq("active", true)
+      .order("price");
+
+    if (error) {
+      result.textContent = error.message;
+      return;
+    }
+
+    planSelect.innerHTML = '<option value="">Select Plan</option>';
+
+    (data || []).forEach(plan => {
+      const option = document.createElement("option");
+      option.value = plan.id;
+      option.textContent = plan.name + " - Rs. " + plan.price;
+      planSelect.appendChild(option);
+    });
+  }
+
+  loadAddMemberPlans();
+
+  addMemberForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const button = addMemberForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = "Creating Account...";
+    result.textContent = "";
+
+    try {
+      const { data, error } = await db.functions.invoke(
+        "admin-create-member",
+        {
+          body: {
+            name: document.getElementById("newMemberName").value.trim(),
+            email: document.getElementById("newMemberEmail").value.trim(),
+            phone: document.getElementById("newMemberPhone").value.trim(),
+            password: document.getElementById("newMemberPassword").value,
+            plan_id: planSelect.value,
+            referral: document.getElementById("newMemberReferral").value.trim()
+          }
+        }
+      );
+
+      if (error) {
+        let details = error.message;
+        try {
+          const response = await error.context.json();
+          details = response.error || details;
+        } catch (_) {}
+        throw new Error(details);
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || "Account creation failed.");
+      }
+
+      result.style.color = "#00e5a0";
+      result.textContent =
+        "Success! " + data.member.email +
+        " | Plan: " + data.plan +
+        " | Referral: " + data.member.referral_code;
+
+      addMemberForm.reset();
+      await loadAddMemberPlans();
+
+    } catch (error) {
+      result.style.color = "#ff7070";
+      result.textContent = error.message;
+    }
+
+    button.disabled = false;
+    button.textContent = "CREATE ACCOUNT & ACTIVATE PLAN";
+  });
+}
+  
+  
 // =================================
 // AZDAR REFERRAL TEAM
 // =================================
