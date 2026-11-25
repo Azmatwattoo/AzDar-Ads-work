@@ -2100,6 +2100,12 @@ async function loadDashboard(user) {
   if (profile.role === "admin") {
     document.getElementById("adminPanel").classList.remove("hidden");
 
+    document.getElementById("adminAddHeading").classList.remove("hidden");
+    
+   document.getElementById("adminAddDescription").classList.remove("hidden");
+    
+   document.getElementById("adminAddMemberForm").classList.remove("hidden");
+    
     if (typeof window.loadAddMemberPlans === "function") {
       await window.loadAddMemberPlans();
     }
