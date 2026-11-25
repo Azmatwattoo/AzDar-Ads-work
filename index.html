@@ -2102,21 +2102,16 @@ async function loadDashboard(user) {
   document.getElementById("regReferral").value =
     new URLSearchParams(window.location.search).get("ref") || "";
 
-  if(profile.role === "admin") {
+  if (profile.role === "admin") {
   document.getElementById("adminPanel").classList.remove("hidden");
 
-  if (window.loadAddMemberPlans) {
+  if (typeof window.loadAddMemberPlans === "function") {
     await window.loadAddMemberPlans();
   }
 
   await loadAdminData();
   }
 
-  await loadMemberData();
-  await loadReferralTeam();
-}
-
-  
 const addMemberForm = document.getElementById("adminAddMemberForm");
 
 if (addMemberForm) {
