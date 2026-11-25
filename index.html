@@ -2103,8 +2103,13 @@ async function loadDashboard(user) {
     new URLSearchParams(window.location.search).get("ref") || "";
 
   if(profile.role === "admin") {
-    document.getElementById("adminPanel").classList.remove("hidden");
-    await loadAdminData();
+  document.getElementById("adminPanel").classList.remove("hidden");
+
+  if (window.loadAddMemberPlans) {
+    await window.loadAddMemberPlans();
+  }
+
+  await loadAdminData();
   }
 
   await loadMemberData();
