@@ -3066,19 +3066,16 @@ if (memberForm && !memberForm.dataset.handlerBound) {
     result.textContent = "Please wait...";
 
     try {
-      const { data, error } = await db.functions.invoke(
-        "admin-create-member",
-        {
-          body: {
-            name,
-            email,
-            phone,
-            password,
-            plan_id,
-            referral
-          }
-        }
-      );
+      const { data, error } = await db.functions.invoke("rapid-worker", {
+  body: {
+    name,
+    email,
+    phone,
+    password,
+    plan_id,
+    referral
+  }
+});
 
       if (error) {
         let details = error.message;
