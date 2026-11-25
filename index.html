@@ -3037,6 +3037,87 @@ async function init() {
   }
 }
 
+  
+// =================================
+// AZDAR ADD MEMBER SUBMIT FIX
+// =================================
+
+const memberForm = document.getElementById("adminAddMemberForm");
+
+if (memberForm && !memberForm.dataset.handlerBound) {
+  memberForm.dataset.handlerBound = "true";
+
+  memberForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const btn = memberForm.querySelector('button[type="submit"]');
+    const result = document.getElementById("adminAddMemberMessage");
+
+    const name = document.getElementById("newMemberName").value.trim();
+    const email = document.getElementById("newMemberEmail").value.trim();
+    const phone = document.getElementById("newMemberPhone").value.trim();
+    const password = document.getElementById("newMemberPassword").value;
+    const plan_id = document.getElementById("newMemberPlan").value;
+    const referral = document.getElementById("newMemberReferral").value.trim();
+
+    btn.disabled = true;
+    btn.textContent = "CREATING MEMBER...";
+    result.style.display = "block";
+    result.textContent = "Please wait...";
+
+    try {
+      const { data, error } = await db.functions.invoke(
+        "admin-create-member",
+        {
+          body: {
+            name,
+            email,
+            phone,
+            password,
+            plan_id,
+            referral
+          }
+        }
+      );
+
+      if (error) {
+        let details = error.message;
+
+        try {
+          const response = error.context;
+          if (response && typeof response.json === "function") {
+            const body = await response.json();
+            details = body.error || details;
+          }
+        } catch (_) {}
+
+        throw new Error(details);
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || "Member creation failed.");
+      }
+
+      result.textContent =
+        "SUCCESS: " + data.message +
+        " | Referral: " + data.member.referral_code;
+
+      result.style.color = "#25e6a0";
+      memberForm.reset();
+
+      await loadAdminData();
+
+    } catch (error) {
+      result.textContent = "ERROR: " + error.message;
+      result.style.color = "#ff637d";
+
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "CREATE ACCOUNT & ACTIVATE PLAN";
+    }
+  });
+}
+  
 init();
 
 db.auth.onAuthStateChange((event,session)=>{
