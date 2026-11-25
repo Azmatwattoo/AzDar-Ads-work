@@ -2120,9 +2120,9 @@ if (addMemberForm) {
 
   result.style.display = "block";
   
-  
-async function loadAddMemberPlans() {
+  async function loadAddMemberPlans() {
   planSelect.innerHTML = '<option value="">Loading plans...</option>';
+  result.textContent = "";
 
   const { data, error } = await db
     .from("plans")
@@ -2132,25 +2132,28 @@ async function loadAddMemberPlans() {
 
   if (error) {
     planSelect.innerHTML = '<option value="">Failed to load plans</option>';
-    result.textContent = error.message;
-    console.error(error);
+    result.textContent = "Error: " + error.message;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    planSelect.innerHTML = '<option value="">No active plans found</option>';
+    result.textContent = "Supabase se koi active plan nahi mila.";
     return;
   }
 
   planSelect.innerHTML = '<option value="">Select Plan</option>';
 
-  (data || []).forEach(plan => {
+  data.forEach(plan => {
     const option = document.createElement("option");
     option.value = plan.id;
     option.textContent = plan.name + " - Rs. " + plan.price;
     planSelect.appendChild(option);
   });
-}
 
-  window.loadAddMemberPlans = loadAddMemberPlans;
-  
-  
-  
+  result.textContent = "Plans loaded successfully.";
+  }
+
 // =================================
 // AZDAR REFERRAL TEAM
 // =================================
