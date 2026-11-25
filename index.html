@@ -2054,27 +2054,25 @@ async function resetPassword() {
   }
 }
 
-// =================================
+  // =================================
 // LOAD DASHBOARD
 // =================================
 
 async function loadDashboard(user) {
-
   currentUser = user;
 
   document.getElementById("authSection").classList.add("hidden");
   document.getElementById("dashboardSection").classList.remove("hidden");
-
   document.getElementById("topStatus").textContent = "CONNECTED";
 
-  const {data:profile,error} = await db
+  const { data: profile, error } = await db
     .from("profiles")
     .select("*")
-    .eq("id",user.id)
+    .eq("id", user.id)
     .single();
 
-  if(error || !profile) {
-    message("dashboardMessage","Profile not found. Please contact admin.","error");
+  if (error || !profile) {
+    message("dashboardMessage", "Profile not found. Please contact admin.", "error");
     return;
   }
 
@@ -2084,14 +2082,9 @@ async function loadDashboard(user) {
     profile.full_name || "Member";
 
   document.getElementById("memberEmail").textContent = user.email;
-
   document.getElementById("memberId").textContent = profile.id;
-
-  document.getElementById("myReferral").textContent =
-    profile.referral_code;
-
-  document.getElementById("roleBadge").textContent =
-    profile.role.toUpperCase();
+  document.getElementById("myReferral").textContent = profile.referral_code;
+  document.getElementById("roleBadge").textContent = profile.role.toUpperCase();
 
   const referralUrl =
     window.location.href.split("?")[0] +
@@ -2103,14 +2096,22 @@ async function loadDashboard(user) {
     new URLSearchParams(window.location.search).get("ref") || "";
 
   if (profile.role === "admin") {
-  document.getElementById("adminPanel").classList.remove("hidden");
+    document.getElementById("adminPanel").classList.remove("hidden");
 
-  if (typeof window.loadAddMemberPlans === "function") {
-    await window.loadAddMemberPlans();
+    if (typeof window.loadAddMemberPlans === "function") {
+      await window.loadAddMemberPlans();
+    }
+
+    await loadAdminData();
   }
 
-  await loadAdminData();
-  }
+  await loadMemberData();
+  await loadReferralTeam();
+}
+
+// =================================
+// ADMIN ADD MEMBER PLAN LOADER
+// =================================
 
 const addMemberForm = document.getElementById("adminAddMemberForm");
 
@@ -2118,46 +2119,42 @@ if (addMemberForm) {
   const planSelect = document.getElementById("newMemberPlan");
   const result = document.getElementById("adminAddMemberMessage");
 
-  result.style.display = "block";
-  
   async function loadAddMemberPlans() {
-  planSelect.innerHTML = '<option value="">Loading plans...</option>';
-  result.textContent = "";
+    planSelect.innerHTML = '<option value="">Loading plans...</option>';
+    result.textContent = "";
 
-  const { data, error } = await db
-    .from("plans")
-    .select("id,name,price")
-    .eq("active", true)
-    .order("price");
+    const { data, error } = await db
+      .from("plans")
+      .select("id,name,price")
+      .eq("active", true)
+      .order("price");
 
-  if (error) {
-    planSelect.innerHTML = '<option value="">Failed to load plans</option>';
-    result.textContent = "Error: " + error.message;
-    return;
-  }
+    if (error) {
+      planSelect.innerHTML = '<option value="">Failed to load plans</option>';
+      result.textContent = error.message;
+      return;
+    }
 
-  if (!data || data.length === 0) {
-    planSelect.innerHTML = '<option value="">No active plans found</option>';
-    result.textContent = "Supabase se koi active plan nahi mila.";
-    return;
-  }
+    if (!data || data.length === 0) {
+      planSelect.innerHTML = '<option value="">No active plans found</option>';
+      return;
+    }
 
-  planSelect.innerHTML = '<option value="">Select Plan</option>';
+    planSelect.innerHTML = '<option value="">Select Plan</option>';
 
-  data.forEach(plan => {
-    const option = document.createElement("option");
-    option.value = plan.id;
-    option.textContent = plan.name + " - Rs. " + plan.price;
-    planSelect.appendChild(option);
-  });
+    data.forEach(plan => {
+      const option = document.createElement("option");
+      option.value = plan.id;
+      option.textContent = plan.name + " - Rs. " + plan.price;
+      planSelect.appendChild(option);
+    });
 
-  result.textContent = "Plans loaded successfully.";
+    result.textContent = "Plans loaded successfully.";
   }
 
   window.loadAddMemberPlans = loadAddMemberPlans;
-
 }
-
+  
 // =================================
 // AZDAR REFERRAL TEAM
 // =================================
