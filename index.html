@@ -2106,6 +2106,22 @@ async function loadDashboard(user) {
     return;
   }
 
+  const maintenanceOn = await getMaintenanceStatus();
+
+if (maintenanceOn && profile.role !== "admin") {
+  await db.auth.signOut();
+
+  currentUser = null;
+  currentProfile = null;
+
+  document.getElementById("authSection").classList.add("hidden");
+  document.getElementById("dashboardSection").classList.add("hidden");
+  document.getElementById("maintenanceSection").classList.remove("hidden");
+
+  document.getElementById("topStatus").textContent = "MAINTENANCE";
+  return;
+}
+  
   currentProfile = profile;
 
   document.getElementById("memberName").textContent =
