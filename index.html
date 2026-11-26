@@ -3083,7 +3083,22 @@ async function init() {
   }
 
   if(data.session) {
-    await loadDashboard(data.session.user);
+  await loadDashboard(data.session.user);
+} else {
+  const maintenanceOn = await getMaintenanceStatus();
+
+  if(maintenanceOn) {
+    document.getElementById("maintenanceSection").classList.remove("hidden");
+    document.getElementById("topStatus").textContent = "MAINTENANCE";
+
+    const registerBtn = document.querySelector(
+      '#authSection button[onclick*="register"]'
+    );
+
+    if(registerBtn) {
+      registerBtn.style.display = "none";
+    }
+  }
   }
 }
 
