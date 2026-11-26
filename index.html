@@ -1924,6 +1924,21 @@ const db = window.supabase.createClient(
   SUPABASE_KEY
 );
 
+  async function getMaintenanceStatus() {
+  const { data, error } = await db
+    .from("site_settings")
+    .select("maintenance_enabled")
+    .eq("id", 1)
+    .single();
+
+  if (error) {
+    console.error("Maintenance check:", error);
+    return false;
+  }
+
+  return data.maintenance_enabled;
+  }
+  
 let currentUser = null;
 let currentProfile = null;
 
