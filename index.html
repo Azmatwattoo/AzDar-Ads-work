@@ -1946,6 +1946,40 @@ const db = window.supabase.createClient(
 
   return data.maintenance_enabled;
   }
+
+  async function toggleMaintenance() {
+
+  if (!currentProfile || currentProfile.role !== "admin") {
+    return alert("Admin access required!");
+  }
+
+  const current = await getMaintenanceStatus();
+
+  const { error } = await db
+    .from("site_settings")
+    .update({
+      maintenance_enabled: !current,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", 1);
+
+  if (error) {
+    alert("Error: " + error.message);
+    return;
+  }
+
+  const status = document.getElementById("maintenanceStatus");
+
+  if (status) {
+    status.textContent = !current
+      ? "MAINTENANCE IS ON"
+      : "WEBSITE IS LIVE";
+  }
+
+  alert(!current ? "Maintenance Enabled!" : "Website is Live!");
+}
+
+window.toggleMaintenance = toggleMaintenance;
   
 let currentUser = null;
 let currentProfile = null;
