@@ -2186,6 +2186,11 @@ if (maintenanceOn && profile.role !== "admin") {
   if (profile.role === "admin") {
     document.getElementById("adminPanel").classList.remove("hidden");
 
+    const maintenanceOn = await getMaintenanceStatus();
+
+document.getElementById("maintenanceStatus").textContent =
+  maintenanceOn ? "MAINTENANCE IS ON" : "WEBSITE IS LIVE";
+    
     document.getElementById("adminAddHeading").classList.remove("hidden");
     
    document.getElementById("adminAddDescription").classList.remove("hidden");
