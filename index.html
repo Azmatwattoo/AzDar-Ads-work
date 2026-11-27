@@ -815,37 +815,53 @@ input:focus,select:focus {
   }
   }
 
-/* AZDAR MOBILE PERFORMANCE FIX */
+
+/* AZDAR MOBILE PREMIUM ANIMATIONS */
 
 @media(max-width:768px) {
 
   body {
-    animation:none !important;
     background:
       radial-gradient(circle at top right,#35145b 0%,transparent 40%),
       #070512 !important;
+    background-size:180% 180%,auto !important;
+    animation:galaxyMove 20s ease-in-out infinite !important;
   }
 
   body::after {
-    display:none !important;
+    display:block !important;
+    opacity:.08 !important;
+    animation:lightFlow 28s linear infinite !important;
   }
 
   body::before {
-    opacity:.07 !important;
-    filter:blur(45px) !important;
+    opacity:.09 !important;
+    filter:blur(35px) !important;
   }
 
-  .card,.stat,.plan,.withdraw-box,
-  .container {
-    animation:none !important;
-    transform:none !important;
+  .card,.stat,.plan,.withdraw-box {
+    animation:cardFloat 8s ease-in-out infinite !important;
+    transform:none;
+  }
+
+  .card:nth-child(even),
+  .plan:nth-child(even) {
+    animation-delay:2s !important;
   }
 
   .card::before,
   .stat::before,
   .plan::before {
-    animation:none !important;
-    opacity:.25 !important;
+    animation:borderTravel 7s linear infinite !important;
+    opacity:.35 !important;
+  }
+
+  .stat h2 {
+    animation:numberGlow 4s ease-in-out infinite !important;
+  }
+
+  .container {
+    animation:pageAppear .6s ease both !important;
   }
 
   .card,.stat,.plan {
@@ -855,11 +871,12 @@ input:focus,select:focus {
   }
 
   button {
-    transition:background .2s ease !important;
+    transition:transform .2s ease,box-shadow .2s ease !important;
   }
 
-  button:hover {
-    transform:none !important;
+  button:active {
+    transform:scale(.97) !important;
+    box-shadow:0 0 12px #00eaff66 !important;
   }
 }
 
