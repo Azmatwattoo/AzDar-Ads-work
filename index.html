@@ -1956,28 +1956,39 @@ const db = window.supabase.createClient(
   SUPABASE_KEY
 );
 
-  async function getMaintenanceStatus() {
+  
+async function getMaintenanceStatus() {
   const { data, error } = await db
     .from("site_settings")
     .select("maintenance_enabled")
     .eq("id", 1)
     .single();
 
-  if (error) {
+  if (error || !data) {
     console.error("Maintenance check:", error);
-    return false;
+    return true;
   }
 
-  return data.maintenance_enabled;
-  }
+  return data.maintenance_enabled === true;
+}
 
-  async function toggleMaintenance() {
-
+async function toggleMaintenance() {
   if (!currentProfile || currentProfile.role !== "admin") {
     return alert("Admin access required!");
   }
 
-  const current = await getMaintenanceStatus();
+  const { data, error: readError } = await db
+    .from("site_settings")
+    .select("maintenance_enabled")
+    .eq("id", 1)
+    .single();
+
+  if (readError || !data) {
+    alert("Unable to verify maintenance status. Please try again.");
+    return;
+  }
+
+  const current = data.maintenance_enabled;
 
   const { error } = await db
     .from("site_settings")
