@@ -3164,9 +3164,22 @@ async function init() {
     return;
   }
 
-  if(data.session) {
+  
+if(data.session) {
+
+  const { error: expiryError } = await db.rpc(
+    "expire_old_memberships"
+  );
+
+  if(expiryError) {
+    console.error("Membership expiry:", expiryError);
+  }
+
   await loadDashboard(data.session.user);
-} else {
+
+}
+  
+  else {
   const maintenanceOn = await getMaintenanceStatus();
 
   if(maintenanceOn) {
